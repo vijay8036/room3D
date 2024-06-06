@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Three.js GLTF Demo</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        canvas {
+            display: block;
+            filter: drop-shadow(9px 9px 20px rgba(0,0,0,0.4));
+        }
+    </style>
+</head>
+<body>
+   <canvas id="c" ></canvas>
+   <script type="importmap">
+    {
+        "imports": {
+            "three": "three.js-master/build/three.module.js",
+            "three/addons/": "three.js-master/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from '/three.js-master/build/three.module.js';
+        import { GLTFLoader } from '/three.js-master/build/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from '/three.js-master/build/jsm/controls/OrbitControls.js';
+         // Initialize scene, camera, and renderer
+        let controls;
+        const scene = new THREE.Scene();
+      
+        const fov = 45;
+        const near = 1;
+        const far = 5;
+        const size = {
+            width: window.innerWidth,
+            height:  window.innerHeight
+        }
+        const aspect = size.width / size.height; // the canvas default
+        const camera = new THREE.PerspectiveCamera(fov, aspect, 0.25, 60);
+        camera.position.set(1, 0, 1);
+        const canvas = document.querySelector('#c');
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            alpha: true,
+            antialias: true,
+            preserveDrawingBuffer: true
+        });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        
+        const Eloader = new THREE.TextureLoader();
+        Eloader.load('sss.jpeg', function(texture) {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            // scene.background = texture;
+            scene.environment = texture;
+        });
+
+   
+
+    // const headerBigLight1 = new THREE.AmbientLight(0xffffff, 0.4);
+    // scene.add(headerBigLight1);
+    // const headerBigLight2 = new THREE.DirectionalLight(0xfdffe3, 0.5);
+    // headerBigLight2.position.set(-100, -25, 25);
+    // scene.add(headerBigLight2);
+    // const headerBigLight3 = new THREE.DirectionalLight(0xc4f1ff, 0.5);
+    // headerBigLight3.position.set(100, -25, 25);
+    // scene.add(headerBigLight3);
+    // const headerBigLight4 = new THREE.DirectionalLight(0xffffff, 0.2);
+    // headerBigLight4.position.set(200, 0, -200);
+    // scene.add(headerBigLight4);
+
+
+    const headerBigLight5 = new THREE.DirectionalLight(0xfdffe3, 1);
+    scene.add(headerBigLight5);
+
+    // const headerBigLight7 = new THREE.DirectionalLight(0xffffff, 0.5);
+    // headerBigLight7.position.set(-5, 10, 0);
+    // scene.add(headerBigLight7);
+
+    const headerBigLight1 = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(headerBigLight1);
+    const headerBigLight2 = new THREE.DirectionalLight(0xfdffe3, 0.5);
+    headerBigLight2.position.set(-100, -25, 25);
+    // scene.add(headerBigLight2);
+    const headerBigLight3 = new THREE.DirectionalLight(0xc4f1ff, 0.5);
+    headerBigLight3.position.set(100, -25, 25);
+    // scene.add(headerBigLight3);
+    const headerBigLight4 = new THREE.DirectionalLight(0xffffff, 0.2);
+    headerBigLight4.position.set(200, 0, -200);
+    // scene.add(headerBigLight4);
+
+    const light = new THREE.PointLight( 0xffffff, 10, 100 );
+    light.position.set( -0.646, -1.328, 0.657 );
+    // scene.add( light );
+
+    
+        // Load the GLTF model
+        const loader = new GLTFLoader();
+        loader.load(
+            'modern_luxury.glb', // Replace with the path to your model
+            function (gltf) {
+                var model = gltf.scene;
+                // var modelScale = 0.0025;
+                var modelScale = 0.03;
+                var normalPositionX = modelScale * 0;
+                var normalPositionY = modelScale * 0;
+                var normalPositionZ = modelScale * 0;
+                model.position.set(normalPositionX, normalPositionY, normalPositionZ);
+                model.scale.set(modelScale, modelScale, modelScale);
+                // model.scale.set( 20,20,20 );
+                model.rotation.x = 0;
+                model.rotation.z = 0;
+
+                model.traverse((node) => {
+                    if (node.isMesh) {
+                        console.log(node.material)
+                        if (node.material.name === "Mat_3") {
+                            node.material.roughness = 0.22
+                            node.material.metalness = 1
+                            node.material.shininess = 100;
+                            node.material.flatShading = !1;
+                            // node.geometry.computeVertexNormals();
+                        }
+                        if (node.material.name === "Material.005") {
+                            node.material.roughness = 0.45
+                            node.material.metalness = 1
+                            node.material.shininess = 100;
+                            node.material.flatShading = !1;
+                            // node.geometry.computeVertexNormals();
+                        }
+                    }
+                   
+                });
+                scene.add(gltf.scene);
+                animate();
+            },
+            undefined,
+            function (error) {
+                console.error(error);
+            }
+        );
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearColor(0x000000, 0);
+        renderer.setSize(size.width, size.height);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;    
+
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+        controls.enableZoom = true;
+        controls.enablePan = false;
+        controls.minZoom = 0.01;
+        controls.maxZoom = 0.04;
+        
+        controls.update();
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+            console.log(camera.position)
+            var cx = camera.position.x
+            var cy = camera.position.y
+            var cz = camera.position.z
+            // pointLight1.position.copy(cx,cy,cz);
+            // pointLight2.position.copy(camera.position);   
+            // headerBigLight2.position.copy(camera.position);
+            headerBigLight5.position.copy(camera.position);
+            // headerBigLight4.position.copy(camera.position);
+
+          
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+ 
+</body>
+</html>
